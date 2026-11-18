@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MOCK, api, getBase, loadMock, onLog, setBase } from './api';
+import { api, getBase, onLog, setBase } from './api';
 import { Cursor } from './Cursor';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Intro } from './Intro';
@@ -12,9 +12,9 @@ const SKIP_KEY = 'pathsnap_skip_intro';
 const skipStored = () => { try { return sessionStorage.getItem(SKIP_KEY) === '1'; } catch { return false; } };
 const storeSkip = (v: boolean) => { try { v ? sessionStorage.setItem(SKIP_KEY, '1') : sessionStorage.removeItem(SKIP_KEY); } catch { /* ignore */ } };
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-const pct = (v: number) => (v * 100).toFixed(1) + '%';
+const pct = (v?: number) => (v == null || !Number.isFinite(v) ? '—' : (v * 100).toFixed(1) + '%');   // '—' when the server did not score this trip
 const dur = (s: number) => `${Math.floor(s / 60)}M ${String(Math.round(s % 60)).padStart(2, '0')}S`;
-const delta = (a: number, b: number) => { const x = (b - a) * 100; return (x >= 0 ? '+' : '') + x.toFixed(1) + ' PTS WITH HMM'; };
+const delta = (a?: number, b?: number) => { if (a == null || b == null) return ''; const x = (b - a) * 100; return (x >= 0 ? '+' : '') + x.toFixed(1) + ' PTS WITH HMM'; };
 
 const LAYERS: { k: LayerKey; label: string; sw: string }[] = [
   { k: 'net', label: 'Road network', sw: '#2f3a3d' },
@@ -25,7 +25,7 @@ const LAYERS: { k: LayerKey; label: string; sw: string }[] = [
 ];
 
 /* ---------------- boot screen (kept from the old UI) ---------------- */
-function Boot({ onReady, onEnter, ready }: { onReady: (t: Trip[], model: string) => void; onEnter: () => void; ready: boolean }) {
+function Boot({ onReady, onEnter, ready }: { onReady: (t: Trip[], model: string, mock: boolean) => void; onEnter: () => void; ready: boolean }) {
   const [pctV, setPctV] = useState(0), [msg, setMsg] = useState('Connecting to API'), [err, setErr] = useState(''), [url, setUrl] = useState(getBase());
   const [tries, setTries] = useState(0);
   useEffect(() => {
@@ -34,13 +34,12 @@ function Boot({ onReady, onEnter, ready }: { onReady: (t: Trip[], model: string)
     (async () => {
       setErr('');
       try {
-        if (MOCK) await loadMock();
         await to(15, 'Checking API');
         const h = await api.health();
         await to(55, 'Loading trips');
         const t = await api.trips();
         await to(100, 'Ready');
-        if (!dead) onReady(t, h.model ?? '');
+        if (!dead) onReady(t, h.model ?? '', h.mock === true);
       } catch (e) { if (!dead) { setMsg('Connection failed'); setErr((e as Error).message); } }
     })();
     return () => { dead = true; };
@@ -57,7 +56,7 @@ function Boot({ onReady, onEnter, ready }: { onReady: (t: Trip[], model: string)
             <p>{err}</p>
             <input value={url} onChange={e => setUrl(e.target.value)} spellCheck={false} aria-label="API base URL" />
             <button className="cta" onClick={() => { setBase(url); setTries(n => n + 1); }}>Retry</button>
-            <span className="hint">Dev only: add <b>?mock=1</b> to the page URL to run on synthetic data.</span>
+            <span className="hint">Check the server address and that the PathSnap API is running on that laptop.</span>
           </div>
         )}
         {ready && <button className="cta" onClick={onEnter} autoFocus>Enter</button>}
@@ -70,7 +69,7 @@ function Boot({ onReady, onEnter, ready }: { onReady: (t: Trip[], model: string)
 export function App() {
   const [phase, setPhase] = useState<'boot' | 'intro' | 'app'>('boot'), [ready, setReady] = useState(false);
   const entered = phase === 'app';
-  const [trips, setTrips] = useState<Trip[]>([]), [model, setModel] = useState('');
+  const [trips, setTrips] = useState<Trip[]>([]), [model, setModel] = useState(''), [mock, setMock] = useState(false);
   const [sel, setSel] = useState<string | null>(null), [busy, setBusy] = useState(false);
   const [res, setRes] = useState<PredictResult | null>(null), [error, setError] = useState('');
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ net: true, gps: true, clf: true, hmm: true, brk: true });
@@ -107,12 +106,12 @@ export function App() {
   return (
     <>
       <Cursor />
-      {phase === 'boot' && <Boot ready={ready} onReady={(t, mo) => { setTrips(t); setModel(mo); setReady(true); }} onEnter={() => setPhase(location.hash === '#app' || skipStored() ? 'app' : 'intro')} />}
+      {phase === 'boot' && <Boot ready={ready} onReady={(t, mo, mk) => { setTrips(t); setModel(mo); setMock(mk); setReady(true); }} onEnter={() => setPhase(location.hash === '#app' || skipStored() ? 'app' : 'intro')} />}
       {phase === 'intro' && <Intro trips={trips} onDone={() => { storeSkip(true); setPhase('app'); }} />}
       <div className={'app' + (entered ? ' on' : '')}>
-        {MOCK && <div className="mockbar">MOCK MODE · SYNTHETIC RESULTS · NO API CALL IS BEING MADE · DO NOT QUOTE THESE NUMBERS</div>}
+        {mock && <div className="mockbar">MOCK SERVER · RECORDED SAMPLE DATA · NOT THE REAL MODEL · DO NOT QUOTE THESE NUMBERS</div>}
         <header>
-          <span className="label tele">000_0_01 · {MOCK ? 'MOCK' : getBase().replace(/^https?:\/\//, '')} · <button className="linkbtn" onClick={() => { storeSkip(false); setPhase('intro'); }}>Replay intro</button></span>
+          <span className="label tele">000_0_01 · {getBase().replace(/^https?:\/\//, '')} ·<button className="linkbtn" onClick={() => { storeSkip(false); setPhase('intro'); }}>Replay intro</button></span>
           <h2 className="brand">PATHSNAP</h2>
           <span className="label tele">{model || '—'}</span>
         </header>

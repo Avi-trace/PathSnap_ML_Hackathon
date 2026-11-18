@@ -188,8 +188,9 @@ When the real server is reachable on the LAN, switch with `?api=http://<SERVER_I
 ## 10. For the human on the server side (Laptop 1)
 
 1. `ipconfig` → note the IPv4 address on the shared network; give it to the client teammate.
-2. Allow inbound TCP 8000 for the private network (Windows Defender Firewall → Inbound rule → port 8000), or run once in an admin terminal:
-   `netsh advfirewall firewall add rule name="PathSnap API" dir=in action=allow protocol=TCP localport=8000 profile=private`
+2. Allow inbound TCP 8000 (Windows Defender Firewall → Inbound rule → port 8000), or run once in an admin terminal:
+   `netsh advfirewall firewall add rule name="PathSnap API" dir=in action=allow protocol=TCP localport=8000 profile=any`
+   (use `profile=any`: a Wi-Fi network marked "Public" is not covered by a Private-only rule; delete the rule after the event).
 3. Point the API at the evaluation trips and start it, binding to all interfaces:
    `set PATHSNAP_TRIPS_DIR=<folder with the ten trips>` then `python -m uvicorn pathsnap.api:app --host 0.0.0.0 --port 8000`.
 4. Keep the console visible: it prints one line per request, and the evaluator must be shown it.

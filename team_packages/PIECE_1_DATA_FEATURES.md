@@ -22,7 +22,7 @@ A GPS row does **not** correspond to a node or arc row: the link is only geometr
 
 **Coordinates.** Degrees are not distances. The trips are all over the world (25 UTM zones), so each trip is projected into its own UTM zone (metres, scale error < 0.1 %).
 
-**Data-quality findings** (from `reports/eda_trip_summary.csv`): no NaN or impossible coordinates; timestamps always increase; only 94.3 % of steps are exactly 1 s apart, 47 trips have a gap over 5 s
+**Data-quality findings** (from `reports/eda_trip_summary.csv`): no NaN or impossible coordinates; timestamps always increase; 96.7 % of all steps are exactly 1 s apart (the per-trip share averages 94.3 %), 47 trips have a gap over 5 s
 (largest 153,064 s) and 1,538 steps imply more than 50 m/s (GPS jumps or gaps); networks contain 24 self-loops and 1,903 duplicate arcs, 92 % of arcs have a reverse arc, 89 of 90 networks are split into several components;
 reference routes are valid and nearly always head-to-tail connected (99.94 %); 10 trips revisit arcs.
 
@@ -30,6 +30,7 @@ reference routes are valid and nearly always head-to-tail connected (99.94 %); 1
 (cost capped at 200 m, a tiny penalty of 0.2 per route step discourages jumping ahead). A plain "nearest route arc" would fail on routes that revisit or run parallel to themselves. Points whose aligned arc is more than 150 m away get no label.
 
 **Two bad trips.** `00000033` and `00000054` (12 % of train points) have GPS traces whose median distance to their own reference route is 122 m and 125 m with a wide spread, and shifting the trace by its mean offset does not fix them.
+The distance histograms are **bimodal** (`reports/figures/eda_06_gps_route_offset.png`): part of each trace lies within 0-20 m of the route and a large part about 120-145 m away, i.e. the route and trace agree in places and are displaced elsewhere.
 Treat the route as unreliable there (the brief warns routes are "reference", not perfect truth): they are built but excluded from fitting.
 
 **Candidates.** For every GPS point take all arcs within 75 m (exact point-to-segment distance; long arcs are split into 40 m pieces for the spatial index so none are missed). Chosen by measurement on clean trips:
@@ -50,7 +51,8 @@ A baseline that picks the nearest arc is right only 55.7 % of the time, because 
 Parameters: radius 75 m, label cut-off 150 m, heading window +/-2 points, "moving" threshold 4 m, max window 10 s.
 
 ## Your deliverables (the report asks for all of these, and for the partition used in each)
-Write `scripts/08_eda_figures.py` (matplotlib + folium) producing, under `reports/figures/` and `reports/maps/`:
+`scripts/08_eda_figures.py` already produces everything below (see `reports/figures/INDEX_eda.md`; tables in `reports/tables/`; Folium map in `reports/maps/`; screenshot in `reports/screenshots/eda_map.png`).
+**Your job: run it, read the script until you can explain every plot, check each figure for correctness, extend it where you see gaps (more trips, a second Folium map, other plots), and write the report text yourself.** The items:
 1. Dataset inventory table: trips per partition, files, observations per trip (from `eda_trip_summary.csv`).
 2. Missing / invalid value table (NaN, implausible coordinates, non-increasing timestamps) and a short data-quality log of decisions.
 3. Histogram of sampling intervals (log scale) and of trip lengths / durations.

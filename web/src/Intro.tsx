@@ -11,7 +11,7 @@ import type { PredictResult, Trip } from './types';
 // Scroll-driven intro (about 600vh). One live /predict response is fetched at start and the map layers are
 // scrubbed with scroll: raw GPS -> road network -> classifier only -> HMM route -> numbers from `metrics`.
 const clamp = (x: number) => Math.min(1, Math.max(0, x));
-const pct = (v: number) => (v * 100).toFixed(1) + '%';
+const pct = (v?: number) => (v == null || !Number.isFinite(v) ? '—' : (v * 100).toFixed(1) + '%');
 const reducedMotion = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 
 const STAGES = [

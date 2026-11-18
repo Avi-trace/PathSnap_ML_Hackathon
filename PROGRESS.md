@@ -16,7 +16,7 @@ GPS point -> candidate arcs (<=75 m) -> 18 features -> classifier P(arc) -> HMM/
 
 **Data understanding (EDA)** `scripts/01_eda_inventory.py`
 - 90 trips (80 train, 10 student-test), 227,577 GPS observations, trips from 25 different UTM zones, so each trip is projected to its own metric zone.
-- Quality checks: no NaN or implausible coordinates; 94.3 % of steps are exactly 1 s apart but 47 trips contain a gap > 5 s (largest 153,064 s) and 1,538 steps imply > 50 m/s;
+- Quality checks: no NaN or implausible coordinates; 96.7 % of all steps are exactly 1 s apart (the per-trip share averages 94.3 %) but 47 trips contain a gap > 5 s (largest 153,064 s, a single gap inside trip `00000090`) and 1,538 steps imply > 50 m/s;
   networks have 24 self-loops, 1,903 duplicate arcs and almost all have several disconnected components; reference routes are valid and connected (head-to-tail share 99.94 %).
 - Finding: two training trips (`00000033`, `00000054`, 12 % of train observations) have reference routes 70-125 m away from their own GPS trace
   with a wide spread, so their labels are unusable. They are excluded from fitting and documented.
@@ -72,14 +72,25 @@ Optuna TPE on the selected Random Forest, objective = mean 3-fold group-CV Top-1
 Best CV Top-1 **0.8684** against 0.8658 untuned (+0.26 points). On student-test the tuned forest is a **tie, not a win**: Top-1 0.8720 vs 0.8730, macro-F1 0.9295 vs 0.9300, log loss 0.0342 vs 0.0345.
 Every trial landed between 0.8650 and 0.8684, so the model is not sensitive to these settings and the gain is within noise. The final inference bundle (`artifacts/final/bundle.joblib`) is the tuned forest plus the tuned decoder.
 
-## 4. Still to do
+## 4. Report assets, front end and deployment (done)
 
-1. Report figures: model-comparison plots, confusion matrices, MLP loss curve, **Folium maps** (GPS, road network, reference route, predicted route) and the final write-up.
-2. Plain-language walkthrough of each stage for the viva.
-3. Two-laptop deployment test (firewall, LAN address) with the real evaluation folder; remove all mock code before submission.
-4. Public GitHub repository (own repo inside `pathsnap/`), README (written), and AI-assistance disclosure to match the event policy.
+- **Report assets** (`reports/`, indexed in `reports/README.md`): 7 EDA figures + 4 EDA tables + an interactive Folium map of a raw trip; model comparison table, 9 model figures (CV and student-test scores, log loss, confusion matrices, MLP loss curve, LightGBM/XGBoost per-round curves, Optuna plots);
+  Folium prediction maps for 5 student trips (GPS, road network, reference route, classifier-only route, HMM route, layer control) with screenshots; HMM diagnostics (where the HMM helps or hurts).
+- **Over-fitting evidence:** train-minus-CV Top-1 gap is about 0.003 for Gaussian NB and Logistic Regression and 0.010 to 0.037 for the tree, forest, neural and boosting models, and **0.073 for XGBoost** (train 0.937 vs CV 0.864);
+  validation loss of both boosters stops improving after roughly 40-60 of 300 rounds.
+- **Front end:** mock data and the `?mock=1` mode are removed (a red banner appears if a server says it is the dev mock); scores show a dash instead of NaN when the server sends none; web README written; five UI screenshots with the final model.
+- **Deployment:** API restarted on the final bundle and reached over the machine's LAN address with the client IP in the server log; inbound firewall rule for this Python exists on the Public profile; `RUNBOOK.md` written (demo-day checklist, troubleshooting).
+- **Team hand-off:** four per-teammate briefs with explanations and viva questions (`team_packages/`) and a client spec with mock server for the front-end teammate (`client_handoff/`).
 
-## 5. Risks
+## 5. Still to do
+
+1. **Two-laptop test on the real second laptop** with the real evaluation folder. The API was verified over its own LAN address on one machine; whether the venue network lets laptops reach each other (client isolation) is untested.
+2. **Screenshot of the API server console** during the demo (report section 7 asks for the receiving laptop's console).
+3. **The written technical report (PDF):** the team's own analysis and explanations; each member must be able to explain their piece. The tables, figures and maps are ready.
+4. **AI-assistance disclosure** text to match the event policy (placeholder in `README.md`).
+5. Possible improvements if time allows: a larger Bayesian search budget, early stopping for the boosted models, per-trip analysis of why trip `00000077` is hard.
+
+## 6. Risks
 
 - The evaluation trips are unseen; two training trips had unusable reference routes, and similar issues could occur there.
 - WebGL effects were verified on a CPU-rendered browser only (an automatic fallback exists); smoothness on the demo GPU is unverified.

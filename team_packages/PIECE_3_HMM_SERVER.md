@@ -47,8 +47,11 @@ CORS is limited to localhost and private LAN addresses; every request prints a l
 
 ## Your deliverables
 1. The **final bundle** (tuned Random Forest + tuned decoder) is already in `artifacts/final/`. To reproduce it you need the outputs of `04_tune_random_forest.py` (tuned model and out-of-fold file, about 25 minutes), then `python scripts/07_tune_decoder.py` and `06_export_bundle.py --model artifacts/models/RandomForest_tuned.joblib --hmm reports/hmm_best.json`. Review the two comparison CSVs above.
-2. **Folium maps (mandatory, section 6)**: write `scripts/10_folium_prediction_maps.py` producing interactive `reports/maps/pred_trip_<id>.html` for at least two student trips with layers: original GPS, road network, reference route (offline report only; the UI must never show it), classifier-only route, HMM route; distinct colours, legend, layer control, good zoom. Include one trip where the HMM helped and `00000007` where it did not. Save screenshots for the PDF.
-3. Written answers to the six questions of report section 5 plus the classifier-only vs classifier+HMM comparison (pointwise accuracy, sequence-level F1, continuity) and a discussion of failures.
+2. **Folium maps (mandatory, section 6)**: `scripts/10_folium_prediction_maps.py` already produces (review it, run it, and extend it if you need more trips; see `reports/maps/INDEX_maps.md`; screenshots in `reports/screenshots/`) interactive `reports/maps/pred_trip_<id>.html` for at least two student trips with layers: original GPS, road network, reference route (offline report only; the UI must never show it), classifier-only route, HMM route; distinct colours, legend, layer control, good zoom. Include one trip where the HMM helped and `00000007` where it did not. Save screenshots for the PDF.
+3. Use `scripts/10b_hmm_diagnostics.py` (`reports/hmm_diagnostics.csv`, `hmm_diagnostics_00000007.csv`, `hmm_diagnostics_00000077.csv`): for each student trip it counts points where both are right / only the classifier is right / only the HMM is right / both wrong
+   (e.g. `00000007`: 1211 / 42 / 9 / 92; `00000077`: 2593 / 222 / 502 / 594). Study where the HMM loses on `00000007` and write your own explanation. Verified facts: all 30 error ranges (42 points, each 1-3 points long) lie in the last ~14 % of the trip (observations 1169 onward); the vehicle is **moving** there (median 7.5 m/s on the error points, none under 1 m/s, versus 18.6 m/s elsewhere in the trip), so slower, probably more urban driving, not a stop;
+and in every range the arc the HMM chose is connected to the reference arc (an adjacent road, not a disconnected jump). What in the transition model could prefer an adjacent road there?
+   Then write the written answers to the six questions of report section 5 plus the classifier-only vs classifier+HMM comparison (pointwise accuracy, sequence-level F1, continuity) and a discussion of failures.
 4. **API and deployment evidence (section 7):** screenshots of successful responses **in the console of the receiving laptop**; the two-laptop test (below).
 
 **Run the server (Laptop 1):**
@@ -56,7 +59,8 @@ CORS is limited to localhost and private LAN addresses; every request prints a l
 set PATHSNAP_TRIPS_DIR=<folder with the ten evaluation trips: <id>\<id>.track|nodes|arcs|route>
 python -m uvicorn pathsnap.api:app --host 0.0.0.0 --port 8000
 ```
-Find the LAN address with `ipconfig`; allow inbound TCP 8000 for the private network (admin terminal: `netsh advfirewall firewall add rule name="PathSnap API" dir=in action=allow protocol=TCP localport=8000 profile=private`).
+Find the LAN address with `ipconfig`; allow inbound TCP 8000 (admin terminal: `netsh advfirewall firewall add rule name="PathSnap API" dir=in action=allow protocol=TCP localport=8000 profile=any`; use `any` because a Wi-Fi marked "Public" is not covered by a Private-only rule).
+Some venue Wi-Fi networks isolate clients so laptops cannot see each other: use a phone hotspot or a router if `curl` from the client laptop hangs. Full checklist: `RUNBOOK.md`.
 From the client laptop: `curl http://<ip>:8000/health`. Default trips folder is the `student_test` partition (development only). More in `client_handoff/CLIENT_README.md`, section 10.
 
 ## Likely viva questions

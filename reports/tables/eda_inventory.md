@@ -1,0 +1,4 @@
+| partition | n_trips | files_per_trip | total_files | total_gps_points | gps_per_trip_min | gps_per_trip_median | gps_per_trip_max |
+|---|---|---|---|---|---|---|---|
+| train | 80 | 4 | 320 | 208417 | 361 | 1529 | 19313 |
+| student_test | 10 | 4 | 40 | 19160 | 262 | 1420 | 3958 |

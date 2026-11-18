@@ -1,0 +1,10 @@
+Model,Algorithm family,Key configuration,CV macro-F1 (mean +/- std),CV Top-1,Route continuity (student),Student-test macro-F1,Log loss,Inference time (s/100k rows)
+GaussianNB,Probabilistic,var_smoothing=1e-9,0.8233 +/- 0.0050,0.7989,0.8802,0.8163,0.3551,0.0234
+LogisticRegression,Linear,"StandardScaler + C=1.0, lbfgs, max_iter=300",0.9019 +/- 0.0183,0.8545,0.8765,0.9056,0.0524,0.0160
+DecisionTree,Tree,"max_depth=12, min_samples_leaf=50",0.9221 +/- 0.0213,0.8593,0.8777,0.9276,0.0394,0.0139
+RandomForest,Bagging ensemble,"50 trees, max_depth=16, min_samples_leaf=50",0.9262 +/- 0.0201,0.8658,0.8824,0.9300,0.0345,0.0929
+ExtraTrees,Bagging ensemble,"50 trees, max_depth=16, min_samples_leaf=50",0.9097 +/- 0.0249,0.8615,0.8782,0.9175,0.0468,0.1079
+HistGradientBoosting,Boosting,"300 iters, lr=0.1, max_leaf_nodes=63",0.9240 +/- 0.0194,0.8575,0.8651,0.9276,0.0407,0.5929
+LightGBM,Boosting,"300 rounds, lr=0.1, num_leaves=63, min_child_samples=50",0.9238 +/- 0.0209,0.8582,0.8351,0.9248,0.0506,0.2875
+XGBoost,Boosting,"300 rounds, lr=0.1, max_depth=8, hist",0.9254 +/- 0.0191,0.8635,0.8871,0.9280,0.0360,0.1090
+MLP(PyTorch),Neural network,"128-64 ReLU, Adam lr=1e-3, wd=1e-5, batch 4096, 15 epochs, BCE",0.9182 +/- 0.0175,0.8634,0.8839,0.9227,0.0385,0.0487

@@ -49,7 +49,8 @@ Every trial was between 0.8650 and 0.8684, so the model is not very sensitive to
 Report it honestly: the gain is within noise, and only 9 trials were possible, so a larger search is unlikely to change the conclusion. Files: `reports/optuna_trials.csv`, `optuna_best.json`, `tuned_vs_untuned.csv`.
 
 ## Your deliverables
-Write `scripts/09_model_figures.py` producing under `reports/figures/`, **from the CSV/JSON files only** (no retyped numbers):
+`scripts/09_model_figures.py` already produces the items below under `reports/figures/` and `reports/tables/` **from the CSV/JSON files only** (see `reports/figures/INDEX_models.md`).
+**Your job: run it, read the script until you can explain every plot, check the figures, extend where needed, and write the per-model report text yourself.** The items:
 1. The consolidated comparison table of report section 3.1 (Model, Family, Key configuration, CV macro-F1, Top-1, Route continuity, Student-test macro-F1, Log loss, Inference time).
 2. Bar charts: CV macro-F1 per model (with fold std), student Top-1 and macro-F1, log loss (where applicable).
 3. Confusion matrices on student-test (counts are in `model_comparison.csv`: `st_tn st_fp st_fn st_tp`).
@@ -57,7 +58,9 @@ Write `scripts/09_model_figures.py` producing under `reports/figures/`, **from t
 5. Optuna: trial history, best-so-far, parameter importance, and the tuned-vs-untuned table (CV macro-F1/Top-1, student Top-1, macro-F1, log loss, inference time, tuning cost).
 6. For each of the nine models, a subsection answering the questions A-C of the brief (why suitable; strengths/limits; hyper-parameters and loss; student results; over/under-fitting) using your own words and the numbers.
 
-**Known gap you must close:** training-set accuracy was not recorded, so over/under-fitting evidence is currently only CV-vs-student-test. Add training Top-1 to `03_train_models.py` (score the fitted model on its own training rows) and re-run, then discuss the gap per model.
+**Over/under-fitting evidence (now recorded):** `scripts/11_train_accuracy.py` scores each saved final model on its own training rows (`reports/train_vs_cv_vs_student.csv`, figure `model_overfitting.png`).
+Train-minus-CV Top-1 gap: Gaussian NB +0.003 and Logistic Regression +0.003 (barely over-fit, but also the weakest or simplest), Extra Trees +0.010, Random Forest +0.025, MLP +0.026, Decision Tree +0.031, LightGBM +0.037, HistGradientBoosting +0.037, **XGBoost +0.073** (train 0.937 vs CV 0.864, the largest).
+`scripts/12_boosting_curves.py` (separate 80/20 trip split, not the CV folds) shows both boosters' validation log loss stops improving after roughly 40-60 of 300 rounds and then drifts up (LightGBM's is also spiky), so 300 rounds over-trains them. Discuss what that means for each model.
 Also compute CV macro-F1 per fold if you want error bars on F1 (already in `cv_fold_results.csv`).
 
 ## Likely viva questions

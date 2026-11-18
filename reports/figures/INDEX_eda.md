@@ -1,0 +1,43 @@
+# EDA outputs index (scripts/08_eda_figures.py)
+
+Every figure/table number comes from `reports/eda_trip_summary.csv` (produced by `scripts/01_eda_inventory.py`) or a fresh read of the raw `train`/`student_test` files via `pathsnap.io`/`pathsnap.geo`/`pathsnap.candidates`. No number is hand-typed.
+
+- **`reports/figures/eda_01_sampling_interval.png`** -- Sampling-interval histogram pooled over all GPS steps (log-log) + per-trip share of exactly-1s steps.
+  - source: raw .track files (diff of t) + eda_trip_summary.csv column dt_eq_1s
+  - partition: train + student_test, 90 trips
+- **`reports/figures/eda_02_length_duration.png`** -- Trip length (n_gps) and trip duration histograms, by partition.
+  - source: eda_trip_summary.csv columns n_gps, duration_s
+  - partition: train + student_test, 90 trips
+- **`reports/figures/eda_03_trajectories_grid.png`** -- GPS trajectories in projected metres for 6 diverse train trips (00000026, 00000090, 00000005, 00000032, 00000084, 00000075): short/long duration, small/huge extent, with/without a long gap.
+  - source: raw .track files, projected with pathsnap.geo.Projector; labels from eda_trip_summary.csv
+  - partition: train, 6 trips
+- **`reports/figures/eda_04_network_one_trip.png`** -- Road network (nodes/arcs as light grey lines) with the GPS trace on top, for trip 00000005 (a mid-sized network: 898 nodes / 1579 arcs, near the lower-middle of the 90-trip range).
+  - source: raw .nodes/.arcs/.track files, projected with pathsnap.geo.Projector
+  - partition: train, trip 00000005
+- **`reports/figures/eda_05_network_connectivity.png`** -- Network size (nodes vs arcs, log-log scatter) and connectivity (components, largest-component share) per trip.
+  - source: eda_trip_summary.csv columns n_nodes, n_arcs, n_components, largest_component_frac
+  - partition: train + student_test, 90 trips
+- **`reports/figures/eda_06_gps_route_offset.png`** -- GPS points + reference route in metres, and histogram of point-to-route distance, for trips 00000033 and 00000054 (excluded, unusable labels) vs normal train trip 00000005.
+  - source: recomputed per-point distance via pathsnap.candidates.generate + .route arcs (same method as eda_trip_summary.csv's gps_to_route_* columns, but kept per-point here)
+  - partition: train, trips 00000033 / 00000054 / 00000005
+- **`reports/figures/eda_07_candidate_radius_coverage.png`** -- Reference-arc miss rate and candidates/observation vs radius (25/50/75/100/150 m), observation-weighted, excluding trips 00000033/00000054 (with the including-them line for comparison).
+  - source: eda_trip_summary.csv columns miss_R*, cand_rows_R*, n_gps
+  - partition: train + student_test, 88 trips (+90-trip comparison line)
+- **`reports/tables/eda_inventory.csv / .md`** -- Dataset inventory: trips, files, GPS points per partition.
+  - source: pathsnap.io.list_trips (file counts) + eda_trip_summary.csv (n_gps)
+  - partition: train + student_test
+- **`reports/tables/eda_missing_invalid.csv / .md`** -- Missing/invalid-value table: NaN, implausible coordinates, non-increasing timestamps, speed>50 m/s steps, gaps>5s, per partition.
+  - source: eda_trip_summary.csv columns nan_gps, coord_implausible, t_nonincreasing, n_speed_gt_50ms, n_gaps_gt5s, dt_max
+  - partition: train + student_test
+- **`reports/tables/eda_network_connectivity.csv / .md`** -- Network connectivity summary per partition.
+  - source: eda_trip_summary.csv columns n_nodes, n_arcs, self_loops, duplicate_arcs, two_way_frac, n_components, largest_component_frac
+  - partition: train + student_test
+- **`reports/tables/eda_data_quality_log.csv / .md`** -- Data-quality log: issue, number of trips affected, decision taken.
+  - source: derived from eda_trip_summary.csv (see script for per-issue column)
+  - partition: train + student_test
+- **`reports/maps/eda_trip_00000085.html`** -- Interactive Folium map for train trip 00000085 (1092 GPS points): raw GPS (blue dots), road network within ~300 m of the trace (grey, de-duplicated across directions), reference route (green), legend, layer control, fit to the trace bounds.
+  - source: raw .track/.nodes/.arcs/.route files
+  - partition: train, trip 00000085
+- **`reports/screenshots/eda_map.png`** -- Headless-Chrome screenshot of the map above.
+  - source: rendered from eda_trip_00000085.html
+  - partition: train, trip 00000085
