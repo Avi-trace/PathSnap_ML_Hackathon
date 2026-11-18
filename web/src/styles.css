@@ -7,6 +7,8 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;cursor:none}
+button,.trip,.cta,.skip,.linkbtn,a,label{cursor:pointer} input{cursor:text}   /* the custom "+" cursor stays, but the real pointer shows on controls */
+.errbar{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--warn);color:#000;font:500 11px/1.4 var(--mono);padding:8px 14px;z-index:4;max-width:80%;text-align:center}
 html,body,#root{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
 body{overflow:hidden}
 button{font:inherit;color:inherit}
@@ -85,8 +87,10 @@ aside{display:flex;flex-direction:column;min-height:0;background:var(--panel)}
 .log .ok{color:var(--gold)} .log .err{color:var(--warn)}
 .note{padding:0 24px 18px;margin:0;font:400 10px/1.6 var(--mono);letter-spacing:.06em;color:var(--dim)}
 
-/* webgl post pass sits exactly over the 2D map canvas */
+/* webgl post pass sits exactly over the 2D map canvas; the street-map tiles sit underneath it */
 .map.fx{pointer-events:none}
+.map.tiles{pointer-events:none}
+.attrib{position:absolute;left:52px;bottom:11px;font:400 9.5px/1 var(--mono);letter-spacing:.06em;color:#8b969a;z-index:3;pointer-events:none}
 .linkbtn{background:none;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--gold);text-decoration:underline}
 
 /* scroll intro */
@@ -113,3 +117,32 @@ aside{display:flex;flex-direction:column;min-height:0;background:var(--panel)}
 .intro-flat .intro-map{height:50vh;margin:0}
 .intro-flat .stage-block{position:static;transform:none;opacity:1;max-width:620px}
 .intro-metrics .v{font-size:26px}
+
+/* ---- keep the map visible on any screen size ---- */
+.stage{min-height:360px}
+.intro-map{min-height:240px}
+@media (max-width:1200px){                       /* smaller or zoomed laptop screens: narrower side panels */
+  .cols{grid-template-columns:250px minmax(0,1fr) 290px}
+  .ph,.m,.run,.log,.note{padding-left:16px;padding-right:16px}
+  .trip{padding:12px 16px}
+  .v{font-size:30px}
+  .layers{left:20px;top:20px}
+}
+@media (max-width:980px){                        /* narrow windows: stack trips / map / results and let the page scroll */
+  body{overflow:auto}
+  .app{height:auto;min-height:100vh;grid-template-rows:auto auto auto}
+  .cols{grid-template-columns:1fr;grid-template-rows:auto minmax(440px,68vh) auto}
+  .left{border-right:0;border-bottom:1px solid var(--line)}
+  .right{border-left:0;border-top:1px solid var(--line)}
+  .trips{max-height:230px}
+  .stage{min-height:440px}
+  header{height:auto;padding:12px 16px;grid-template-columns:1fr;gap:6px;justify-items:start}
+  .tele:last-child{text-align:left}
+  .layers{left:14px;top:14px}
+}
+@media (max-width:760px){                        /* intro on narrow windows: text above, map below */
+  .intro-stage{grid-template-columns:1fr;grid-template-rows:minmax(34vh,auto) minmax(0,1fr)}
+  .intro-text{padding:0}
+  .stage-block{left:20px;right:20px}
+  .intro-map{margin:0 16px 56px}
+}

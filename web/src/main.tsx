@@ -5,5 +5,7 @@ import '@fontsource/space-grotesk/500.css';
 import '@fontsource/space-grotesk/700.css';
 import './styles.css';
 import { App } from './App';
+import { ErrorBoundary } from './ErrorBoundary';
 
-createRoot(document.getElementById('root')!).render(<App />);
+// Top-level boundary: an unexpected response shape shows a message instead of a blank page. Reload to recover.
+createRoot(document.getElementById('root')!).render(<ErrorBoundary title="SOMETHING WENT WRONG, RELOAD THE PAGE"><App /></ErrorBoundary>);

@@ -30,6 +30,10 @@ def _wrap(a: np.ndarray) -> np.ndarray:
 
 def gps_kinematics(G: np.ndarray, t: np.ndarray) -> dict:
     n = len(G)
+    if n < 2:                              # a single observation has no neighbours: no heading, speed or time gaps
+        z = np.zeros(n)
+        return {"heading": z.copy(), "moving": np.zeros(n, dtype=bool), "speed_w": z.copy(), "step_speed": z.copy(),
+                "dt_prev": z.copy(), "dt_next": z.copy()}
     i = np.arange(n)
     lo, hi = np.clip(i - WINDOW, 0, n - 1), np.clip(i + WINDOW, 0, n - 1)
     d = G[hi] - G[lo]

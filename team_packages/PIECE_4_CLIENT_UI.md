@@ -6,7 +6,7 @@ Own the evaluator-facing web interface that runs on Laptop 2: connect to the ser
 ## Start here
 1. Read **`client_handoff/CLIENT_README.md`**: it is your complete specification (API contract, hard rules, design brief, acceptance checklist, hand-in).
 2. `client_handoff/mock_server.py` + `samples/` let you build without the real server (it flags itself as a mock; the UI must show a red banner for it).
-3. `web/` is a **working skeleton** (Vite + React + TypeScript). You can extend it or rebuild from the spec. It already has: boot screen, 600vh scroll intro driven by a live API call, trip picker, offline canvas map, results panel, request log, error handling,
+3. `web/` is a **working skeleton** (Vite + React + TypeScript). You can extend it or rebuild from the spec. It already has: boot screen, 600vh scroll intro driven by a live API call, trip picker, canvas map with an OpenStreetMap street map underneath (offline road-network fallback), results panel, request log, error handling,
    WebGL post-processing with automatic fallback, and error boundaries. If you keep it, read every file until you can explain it: you will be asked.
 
 Run: `cd web && npm install && npm run dev -- --host`, then open `http://localhost:5173/` with `client_handoff/mock_server.py` running on port 8000 (development), or `?api=http://<server-ip>:8000` against the real server. See `web/README.md`.
@@ -27,7 +27,7 @@ The scroll intro is not canned: it fetches one real prediction and animates its 
 4. Design decisions already made by the team: keep the scroll intro and the WebGL effects. If the effects lag on the demo laptop, switch them off with `?fx=0` (the pass also switches itself off when frames are slow) and tell the team lead.
 
 ## Likely viva questions
-What does the UI send and receive? Why is the reference route never shown? How is the map drawn without tiles? What happens if the API is down? How does the intro get its data? Why must mock code be removed?
+What does the UI send and receive? Why is the reference route never shown? How are the street-map tiles placed so they line up with the route, and what happens with no internet? What happens if the API is down? How does the intro get its data? Why must mock code be removed?
 
 ## Hand back
 The finished `web/` folder (zipped without `node_modules`) and the screenshots.

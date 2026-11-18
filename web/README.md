@@ -1,7 +1,9 @@
 # PathSnap web client (Laptop 2)
 
 Evaluator-facing UI: connects to the PathSnap API, lists the evaluation trips, runs the selected trip through the API, and shows the
-reconstructed route and scores. Vite + React + TypeScript. Fonts are bundled, the map is drawn on a canvas (no tile server), so it works offline.
+reconstructed route and scores. Vite + React + TypeScript. Fonts are bundled. The route is drawn on a canvas **on top of an OpenStreetMap street map**
+(tiles are fetched by the browser of the machine running the UI, so that machine needs internet for the street map). With no internet the UI says so and shows
+the offline vector road network instead, so it still works.
 
 ## Run
 
@@ -20,6 +22,8 @@ Default API: `http://localhost:8000`.
 | `?api=http://<ip>:8000` | API base address |
 | `#app` | skip the scroll intro and go straight to the trip picker |
 | `?fx=0` | disable the WebGL post-processing pass (also switches itself off when frames are slow) |
+| `?base=0` | do not load the street map (offline road network only) |
+| `?tiles=https://.../{z}/{x}/{y}.png` | use another XYZ tile server instead of OpenStreetMap (`{s}` and `{r}` are optional) |
 | `?introTrip=<trip_id>` | trip used by the scroll intro (default: the trip with the fewest GPS points) |
 
 ## What it shows

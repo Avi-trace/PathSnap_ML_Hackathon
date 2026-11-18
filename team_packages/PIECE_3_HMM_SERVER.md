@@ -43,7 +43,7 @@ You answer: *What are the hidden states? How are emissions and transitions compu
 The tuned HMM improved nine of ten trips and made trip `00000007` worse (92.54 % -> 90.10 %); `00000077` is hard for both. Analyse why for the report ("cases where the HMM did not help"). A sanity check: classifier-only Top-1 recomputed from raw files equals the training-time figure exactly.
 
 **API design.** `POST /predict {"trip_id"}` runs the full pipeline and returns the predicted routes, road geometry and aggregate scores; **the reference route is read only after predicting, only to score, and is never in a response**. Trip ids are checked against an allow-list (no path traversal);
-CORS is limited to localhost and private LAN addresses; every request prints a log line (the brief requires showing the receiving laptop's log). Nothing is cached or hardcoded. Typical 0.3 to 3.5 s per trip (mean 1.2 s).
+CORS is limited to localhost and private LAN addresses; every request prints a log line (the brief requires showing the receiving laptop's log). Nothing is cached or hardcoded. Most trips take 0.3 to 3 s (mean 1.2 s for the pipeline on an idle laptop); the largest can take 5 s or more end to end, and requests are handled one at a time.
 
 ## Your deliverables
 1. The **final bundle** (tuned Random Forest + tuned decoder) is already in `artifacts/final/`. To reproduce it you need the outputs of `04_tune_random_forest.py` (tuned model and out-of-fold file, about 25 minutes), then `python scripts/07_tune_decoder.py` and `06_export_bundle.py --model artifacts/models/RandomForest_tuned.joblib --hmm reports/hmm_best.json`. Review the two comparison CSVs above.

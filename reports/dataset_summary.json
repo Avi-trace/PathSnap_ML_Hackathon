@@ -1,0 +1,20 @@
+{
+  "train": {
+    "trips": 78,
+    "eligible_obs": 182490,
+    "rows": 2881960,
+    "rows_per_obs": 15.7924269823004,
+    "miss_rate": 0.004548194421612143,
+    "positive_rate": 0.06303349109633721,
+    "nearest_arc_top1": 0.5566989972053263
+  },
+  "student_test": {
+    "trips": 10,
+    "eligible_obs": 19157,
+    "rows": 355566,
+    "rows_per_obs": 18.560630578900664,
+    "miss_rate": 0.000939604322179882,
+    "positive_rate": 0.05382685633609513,
+    "nearest_arc_top1": 0.5558803570496424
+  }
+}

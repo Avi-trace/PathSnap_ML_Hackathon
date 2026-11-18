@@ -6,6 +6,9 @@
     <trip>.route   arc_id             reference route, chronological (training / student_test only)
 
 Development code only ever reads the `train` and `student_test` partitions.
+
+Robustness: GPS rows with a missing/non-finite value are dropped; unreadable or inconsistent files raise a ValueError whose
+message names the file (never its path) so the API can answer with a clear 422 instead of crashing.
 """
 from __future__ import annotations
 
@@ -16,6 +19,10 @@ import numpy as np
 import pandas as pd
 
 PARTITIONS = ("train", "student_test")
+
+
+class BadTripData(ValueError):
+    """A trip's input files are unreadable or inconsistent (the API answers 422 with the message)."""
 
 
 @dataclass
@@ -34,11 +41,20 @@ class Trip:
         return len(self.t)
 
 
+def trip_file(trip_dir: str | Path, trip_id: str, ext: str) -> Path:
+    """<trip_dir>/<trip_id>.<ext>. Built by string join (not with_suffix) so ids that contain dots still work."""
+    return Path(trip_dir) / f"{trip_id}.{ext}"
+
+
 def _table(path: Path, ncols: int, dtype) -> np.ndarray:
     try:
         arr = pd.read_csv(path, sep=r"\s+", header=None, dtype=dtype, engine="c").to_numpy()
     except pd.errors.EmptyDataError:
         return np.empty((0, ncols), dtype=dtype)
+    except (ValueError, pd.errors.ParserError):
+        raise BadTripData(f"cannot read {path.name}: it is not a numeric table") from None
+    if arr.shape[1] < ncols:
+        raise BadTripData(f"cannot read {path.name}: expected {ncols} columns, found {arr.shape[1]}")
     return arr
 
 
@@ -52,20 +68,27 @@ def load_trip_dir(trip_dir: str | Path, trip_id: str, partition: str = "", with_
     The API uses this with with_route=False for inference; the reference route is only
     read server-side, after prediction, to score it.
     """
-    base = Path(trip_dir) / trip_id
-    track = _table(base.with_suffix(".track"), 3, np.float64)
-    nodes = _table(base.with_suffix(".nodes"), 2, np.float64)
-    arcs = _table(base.with_suffix(".arcs"), 2, np.int64)
-    route = None
-    if with_route and base.with_suffix(".route").exists():
-        route = _table(base.with_suffix(".route"), 1, np.int64).ravel()
+    track = _table(trip_file(trip_dir, trip_id, "track"), 3, np.float64)[:, :3]
+    track = track[np.isfinite(track).all(axis=1)]                      # drop rows with a missing / non-finite value
+    nodes = _table(trip_file(trip_dir, trip_id, "nodes"), 2, np.float64)[:, :2]
+    arcs = _table(trip_file(trip_dir, trip_id, "arcs"), 2, np.int64)[:, :2]
+    if len(arcs) and (arcs.min() < 0 or arcs.max() >= len(nodes)):
+        raise BadTripData("the .arcs file refers to node ids that are not in the .nodes file")
+    route = load_route(trip_dir, trip_id) if with_route else None
     return Trip(trip_id, partition, track[:, 0], track[:, 1], track[:, 2], nodes, arcs, route)
 
 
 def load_route(trip_dir: str | Path, trip_id: str) -> np.ndarray | None:
-    """Reference route only (server-side scoring). None if the trip has no .route file."""
-    path = Path(trip_dir) / f"{trip_id}.route"
-    return _table(path, 1, np.int64).ravel() if path.exists() else None
+    """Reference route only (server-side scoring). None if the trip has no usable .route file."""
+    path = trip_file(trip_dir, trip_id, "route")
+    if not path.exists():
+        return None
+    try:
+        arr = _table(path, 1, np.float64).ravel()                        # tolerate "12.0"-style ids
+    except BadTripData:
+        return None
+    arr = arr[np.isfinite(arr)]
+    return arr.astype(np.int64)
 
 
 def load_trip(root: str | Path, partition: str, trip_id: str, with_route: bool = True) -> Trip:

@@ -27,7 +27,8 @@ void main(){
   gl_FragColor = acc;
 }`;
 
-export function createFx(cv: HTMLCanvasElement): Fx | null {
+// onLost is called if the GPU drops the WebGL context later; the caller must then show the plain 2D canvas again.
+export function createFx(cv: HTMLCanvasElement, onLost?: () => void): Fx | null {
   try {
     if (new URLSearchParams(location.search).get('fx') === '0') return null;
     const gl = cv.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false });
@@ -45,9 +46,22 @@ export function createFx(cv: HTMLCanvasElement): Fx | null {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     const uPx = gl.getUniformLocation(pr, 'uPx');
+    cv.addEventListener('webglcontextlost', e => { e.preventDefault(); onLost?.(); }, { once: true });
+    // Self-test: push a solid colour through the whole pass and read it back. Some GPUs/drivers compile the shader
+    // without error but draw nothing, which would hide the map completely; in that case do not use the pass.
+    {
+      const probe = document.createElement('canvas'); probe.width = probe.height = 16;
+      const pc = probe.getContext('2d')!; pc.fillStyle = '#ffaa33'; pc.fillRect(0, 0, 16, 16);
+      cv.width = cv.height = 16; gl.viewport(0, 0, 16, 16);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, probe);
+      gl.uniform2f(uPx, 1 / 16, 1 / 16); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      const px = new Uint8Array(4); gl.readPixels(8, 8, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      if (px[0] < 120 || px[3] < 120) throw new Error('self-test: the pass produced a blank image');
+    }
     return {
       render(src) {
         if (!src.width || !src.height) return;
+        if (gl.isContextLost()) { onLost?.(); return; }
         if (cv.width !== src.width || cv.height !== src.height) { cv.width = src.width; cv.height = src.height; }
         gl.viewport(0, 0, cv.width, cv.height);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
@@ -55,7 +69,8 @@ export function createFx(cv: HTMLCanvasElement): Fx | null {
         gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       },
-      dispose() { gl.deleteTexture(tex); gl.deleteBuffer(buf); gl.deleteProgram(pr); },
+      // release the GPU context explicitly: browsers allow only about 16, and "Replay intro" would otherwise leak one each time
+      dispose() { gl.deleteTexture(tex); gl.deleteBuffer(buf); gl.deleteProgram(pr); gl.getExtension('WEBGL_lose_context')?.loseContext(); },
     };
   } catch (e) { console.warn('fx disabled:', (e as Error).message); return null; }
 }

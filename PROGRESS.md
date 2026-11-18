@@ -59,10 +59,10 @@ The HMM improved nine of ten trips; it made trip `00000007` worse (92.54 % to 90
 Top-1 recomputed from raw files equals the training-time figure exactly (0.8730 for the untuned forest).
 
 **Backend** `pathsnap/api.py` (FastAPI): `GET /health`, `GET /trips`, `POST /predict`. The reference route stays server-side and is used only to compute aggregate
-scores; it is never in a response. Trip ids are allow-listed, CORS is restricted to localhost / private LAN, every request prints a log line. Mean 1.2 s per trip (max 3.2 s).
+scores; it is never in a response. Trip ids are allow-listed, CORS is restricted to localhost / private LAN, every request prints a log line. Measured on an otherwise idle laptop: mean 1.2 s per trip for the prediction pipeline (max 3.2 s); end to end including scoring the largest trips take longer (about 2.5 to 5 s, more if requests queue behind each other).
 
-**Front end** `web/` (React + TypeScript + Vite): boot screen, 600vh scroll-driven intro (5 stages, driven by a live API response), trip picker for the 10 trips, offline canvas map
-(no tiles) with layer toggles, results panel (classifier vs HMM), request log, error handling, WebGL post-processing with automatic fallback. All 10 trips were run in a browser against the live API during development (accuracy, continuity and jump counts matched the API response); four of them were re-checked independently.
+**Front end** `web/` (React + TypeScript + Vite): boot screen, 600vh scroll-driven intro (5 stages, driven by a live API response), trip picker for the 10 trips, a canvas map that draws the route on top of an OpenStreetMap street map
+(falls back to an offline road network when there is no internet) with layer toggles, results panel (classifier vs HMM), request log, error handling, WebGL post-processing with automatic fallback. All 10 trips were run in a browser against the live API during development (accuracy, continuity and jump counts matched the API response); four of them were re-checked independently.
 
 **Client teammate hand-off** `client_handoff/`: a self-contained spec, a mock server and three recorded sample responses so the client laptop can be built independently.
 
@@ -79,12 +79,12 @@ Every trial landed between 0.8650 and 0.8684, so the model is not sensitive to t
 - **Over-fitting evidence:** train-minus-CV Top-1 gap is about 0.003 for Gaussian NB and Logistic Regression and 0.010 to 0.037 for the tree, forest, neural and boosting models, and **0.073 for XGBoost** (train 0.937 vs CV 0.864);
   validation loss of both boosters stops improving after roughly 40-60 of 300 rounds.
 - **Front end:** mock data and the `?mock=1` mode are removed (a red banner appears if a server says it is the dev mock); scores show a dash instead of NaN when the server sends none; web README written; five UI screenshots with the final model.
-- **Deployment:** API restarted on the final bundle and reached over the machine's LAN address with the client IP in the server log; inbound firewall rule for this Python exists on the Public profile; `RUNBOOK.md` written (demo-day checklist, troubleshooting).
+- **Deployment:** the API runs on the server laptop and the UI ran on a second laptop against it over a Wi-Fi hotspot (confirmed by the team); the server console prints one line per request with the client's address; `RUNBOOK.md` written (demo-day checklist, troubleshooting).
 - **Team hand-off:** four per-teammate briefs with explanations and viva questions (`team_packages/`) and a client spec with mock server for the front-end teammate (`client_handoff/`).
 
 ## 5. Still to do
 
-1. **Two-laptop test on the real second laptop** with the real evaluation folder. The API was verified over its own LAN address on one machine; whether the venue network lets laptops reach each other (client isolation) is untested.
+1. **Repeat the two-laptop run on the evaluation day** with the organisers' ten trips in `PATHSNAP_TRIPS_DIR` (the venue network may differ from the one used so far; `RUNBOOK.md` has the 60-second check).
 2. **Screenshot of the API server console** during the demo (report section 7 asks for the receiving laptop's console).
 3. **The written technical report (PDF):** the team's own analysis and explanations; each member must be able to explain their piece. The tables, figures and maps are ready.
 4. **AI-assistance disclosure** text to match the event policy (placeholder in `README.md`).

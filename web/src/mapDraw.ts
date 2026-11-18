@@ -1,10 +1,12 @@
 import type { PredictResult } from './types';
 
 // Shared 2D map drawing, used by the app map and the scroll intro. No tiles, works offline.
-export interface Scene { net: Float32Array; gps: Float32Array; clf: Float32Array; brk: Float32Array; hmm: Float32Array }
+// k = the local projection (degrees -> metres) the scene was built with; the base-map tiles use the same one so they line up with the route.
+export interface Scene { net: Float32Array; gps: Float32Array; clf: Float32Array; brk: Float32Array; hmm: Float32Array; k: { lon0: number; lat0: number; kx: number; ky: number } }
 export interface View { s: number; tx: number; ty: number }
 // Per-layer alpha (0..1) and how much of each layer is revealed (0..1).
-export interface DrawOpts { net: number; gps: number; clf: number; brk: number; hmm: number; gpsFrac: number; clfFrac: number; hmmFrac: number }
+// roadColor / roadW are optional: the scroll intro keeps the original dark thin roads, the app asks for brighter ones.
+export interface DrawOpts { net: number; gps: number; clf: number; brk: number; hmm: number; gpsFrac: number; clfFrac: number; hmmFrac: number; roadColor?: string; roadW?: number }
 export const FULL: DrawOpts = { net: 1, gps: 1, clf: 1, brk: 1, hmm: 1, gpsFrac: 1, clfFrac: 1, hmmFrac: 1 };
 
 export const GOLD = '#ffaa33', WARN = '#ff6a55', ROAD = '#2a3336', MUTE = '#c4c7c7';
@@ -16,17 +18,21 @@ function flat(pairs: number[][], w: number, k: { lon0: number; lat0: number; kx:
 }
 
 export function buildScene(r: PredictResult): Scene {
-  const g = r.gps, lon0 = g.reduce((a, p) => a + p[0], 0) / g.length, lat0 = g.reduce((a, p) => a + p[1], 0) / g.length;
+  // (a response without GPS points must not turn every coordinate into NaN: fall back to the first road segment)
+  const g = r.gps, n = g.length, lon0 = n ? g.reduce((a, p) => a + p[0], 0) / n : (r.network[0]?.[0] ?? 0), lat0 = n ? g.reduce((a, p) => a + p[1], 0) / n : (r.network[0]?.[1] ?? 0);
   const k = { lon0, lat0, kx: 111320 * Math.cos(lat0 * Math.PI / 180), ky: 111132 };
-  return { net: flat(r.network, 4, k), gps: flat(g, 2, k), clf: flat(r.classifier_only.arcs, 4, k), brk: flat(r.classifier_only.breaks, 2, k), hmm: flat(r.hmm.route, 2, k) };
+  return { net: flat(r.network, 4, k), gps: flat(g, 2, k), clf: flat(r.classifier_only.arcs, 4, k), brk: flat(r.classifier_only.breaks, 2, k), hmm: flat(r.hmm.route, 2, k), k };
 }
 
-// Fit the GPS trace and the HMM route into W x H. Returns null if the box is too small to be a real layout.
+// Fit the GPS trace and the HMM route into W x H. Returns null only if the box is too small to be a real layout.
+// The margin shrinks on small containers so the map stays large instead of collapsing.
 export function fitView(D: Scene, W: number, H: number, pad = 80): View | null {
-  if (W < 120 || H < 120) return null;
+  if (W < 40 || H < 40) return null;
+  const m = Math.min(pad, Math.min(W, H) * 0.12);
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
   for (const a of [D.gps, D.hmm]) for (let i = 0; i < a.length; i += 2) { x0 = Math.min(x0, a[i]); x1 = Math.max(x1, a[i]); y0 = Math.min(y0, a[i + 1]); y1 = Math.max(y1, a[i + 1]); }
-  const s = Math.min((W - pad * 2) / Math.max(x1 - x0, 1), (H - pad * 2) / Math.max(y1 - y0, 1));
+  if (x0 > x1) return null;                       // nothing to fit
+  const s = Math.min((W - m * 2) / Math.max(x1 - x0, 150), (H - m * 2) / Math.max(y1 - y0, 150));   // at least 150 m across, so a 1-point trip is not zoomed absurdly far
   return { s, tx: W / 2 - s * (x0 + x1) / 2, ty: H / 2 - s * (y0 + y1) / 2 };
 }
 
@@ -39,7 +45,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, D: Scene, v: View, W: n
   if (o.net > 0) {
     ctx.globalAlpha = o.net; ctx.beginPath();
     for (let i = 0; i < D.net.length; i += 4) { ctx.moveTo(D.net[i], D.net[i + 1]); ctx.lineTo(D.net[i + 2], D.net[i + 3]); }
-    ctx.lineWidth = 1.1 * px; ctx.strokeStyle = ROAD; ctx.stroke();
+    ctx.lineWidth = (o.roadW ?? 1.1) * px; ctx.strokeStyle = o.roadColor ?? ROAD; ctx.stroke();
   }
   if (o.gps > 0 && o.gpsFrac > 0) {
     ctx.globalAlpha = o.gps * 0.6; ctx.fillStyle = '#fff'; const r = 1.4 * px, n = Math.ceil(D.gps.length / 2 * o.gpsFrac);

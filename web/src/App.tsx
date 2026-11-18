@@ -6,6 +6,7 @@ import { Intro } from './Intro';
 import { FULL } from './mapDraw';
 import { MapCanvas } from './MapCanvas';
 import { Scramble } from './Scramble';
+import type { TileStatus } from './tiles';
 import type { LayerKey, PredictResult, Trip } from './types';
 
 const SKIP_KEY = 'pathsnap_skip_intro';
@@ -17,7 +18,8 @@ const dur = (s: number) => `${Math.floor(s / 60)}M ${String(Math.round(s % 60)).
 const delta = (a?: number, b?: number) => { if (a == null || b == null) return ''; const x = (b - a) * 100; return (x >= 0 ? '+' : '') + x.toFixed(1) + ' PTS WITH HMM'; };
 
 const LAYERS: { k: LayerKey; label: string; sw: string }[] = [
-  { k: 'net', label: 'Road network', sw: '#2f3a3d' },
+  { k: 'base', label: 'Base map (online)', sw: '#8fa3ad' },
+  { k: 'net', label: 'Road network (offline)', sw: '#6b7b81' },
   { k: 'gps', label: 'GPS observations', sw: '#fff' },
   { k: 'clf', label: 'Classifier only', sw: '#c4c7c7' },
   { k: 'hmm', label: 'Classifier + HMM', sw: '#ffaa33' },
@@ -72,7 +74,10 @@ export function App() {
   const [trips, setTrips] = useState<Trip[]>([]), [model, setModel] = useState(''), [mock, setMock] = useState(false);
   const [sel, setSel] = useState<string | null>(null), [busy, setBusy] = useState(false);
   const [res, setRes] = useState<PredictResult | null>(null), [error, setError] = useState('');
-  const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ net: true, gps: true, clf: true, hmm: true, brk: true });
+  const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ base: true, net: false, gps: true, clf: true, hmm: true, brk: true });
+  const [baseStatus, setBaseStatus] = useState<TileStatus>('idle');
+  // No internet, so no street map: show the offline vector road network instead so the route still sits on something.
+  useEffect(() => { if (baseStatus === 'fail' || baseStatus === 'off') setLayers(l => ({ ...l, net: true })); }, [baseStatus]);
   const [scale, setScale] = useState({ px: 90, label: '' });
   const [lines, setLines] = useState<{ t: string; ok: boolean }[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
@@ -94,14 +99,15 @@ export function App() {
       const ids = trips.map(t => t.trip_id), i = sel ? ids.indexOf(sel) : -1;
       if (e.key === 'ArrowDown') { e.preventDefault(); setSel(ids[Math.min(ids.length - 1, i + 1)]); }
       if (e.key === 'ArrowUp') { e.preventDefault(); setSel(ids[Math.max(0, i - 1)]); }
-      if (e.key === 'Enter' && sel && !(e.target as HTMLElement).matches('button')) run();
+      if (e.key === 'Enter' && sel) { const t = e.target as HTMLElement; if (!t.matches('button') || t.classList.contains('trip')) run(); }   // Enter also works right after clicking a trip
     };
     addEventListener('keydown', h); return () => removeEventListener('keydown', h);
   }, [entered, trips, sel, run]);
 
-  const opts = useMemo(() => ({ ...FULL, net: +layers.net, gps: +layers.gps, clf: +layers.clf, hmm: +layers.hmm, brk: +layers.brk }), [layers]);
+  const opts = useMemo(() => ({ ...FULL, net: +layers.net, gps: +layers.gps, clf: +layers.clf, hmm: +layers.hmm, brk: +layers.brk, roadColor: '#6b7b81', roadW: 1.4 }), [layers]);
   const m = res?.metrics;
-  const tot = m ? m.latency_ms.candidates + m.latency_ms.classifier + m.latency_ms.hmm : 0;
+  const L = m?.latency_ms ?? { candidates: 0, classifier: 0, hmm: 0 };
+  const tot = L.candidates + L.classifier + L.hmm;
 
   return (
     <>
@@ -135,7 +141,8 @@ export function App() {
 
           <main className="stage">
             <i className="br tl" /><i className="br tr" /><i className="br bl" /><i className="br brr" />
-            <ErrorBoundary resetKey={res}><MapCanvas result={res} opts={opts} onScale={(px, label) => setScale({ px, label })} /></ErrorBoundary>
+            <ErrorBoundary resetKey={res}><MapCanvas result={res} opts={opts} base={layers.base} onBase={setBaseStatus} onScale={(px, label) => setScale({ px, label })} /></ErrorBoundary>
+            {error && res && <div className="errbar">Request failed: {error}</div>}
             {!res && !busy && <div className="empty"><div><h2><Scramble text={error ? 'REQUEST FAILED' : 'SELECT A TRIP'} /></h2><span className="label">{error || 'Then reconstruct the route'}</span></div></div>}
             {busy && <div className="empty dim"><div><h2>RECONSTRUCTING</h2><span className="label">Candidates · classifier · Viterbi</span></div></div>}
             {res && (
@@ -148,6 +155,8 @@ export function App() {
                   ))}
                 </div>
                 <div className="drag">Drag to pan · scroll to zoom · double-click to fit</div>
+                {layers.base && baseStatus !== 'fail' && baseStatus !== 'off' && <div className="attrib">© OpenStreetMap contributors</div>}
+                {layers.base && (baseStatus === 'fail' || baseStatus === 'off') && <div className="attrib">{baseStatus === 'off' ? 'Base map switched off' : 'Base map unavailable (no internet)'} · showing the offline road network</div>}
                 <div className="scale"><div style={{ width: scale.px }} />{scale.label}</div>
               </>
             )}
@@ -165,14 +174,15 @@ export function App() {
                     <div className="pair"><div><span className="k">Classifier only</span><b className="v mute">{pct(m.route_continuity_classifier)}</b></div><div><span className="k">+ HMM / Viterbi</span><b className="v">{pct(m.route_continuity_hmm)}</b></div></div>
                     <div className="delta">{delta(m.route_continuity_classifier, m.route_continuity_hmm)}</div></section>
                   <section className="m rows"><span className="label">Run details</span>
-                    <div><span>GPS observations</span><b>{m.n_obs.toLocaleString()}</b></div>
+                    <div><span>GPS observations</span><b>{(m.n_obs ?? 0).toLocaleString()}</b></div>
                     <div><span>Candidate miss rate</span><b>{pct(m.candidate_miss_rate)}</b></div>
-                    <div><span>Disconnected jumps (clf)</span><b>{res!.classifier_only.breaks.length}</b></div>
+                    <div><span>Route F1 (clf → HMM)</span><b>{pct(m.route_f1_classifier)} → {pct(m.route_f1_hmm)}</b></div>
+                    <div><span>Disconnected jumps (clf)</span><b>{res!.classifier_only?.breaks?.length ?? 0}</b></div>
                     <div><span>Model</span><b>{model || '—'}</b></div></section>
                   <section className="m"><span className="label">Latency</span>
                     <div className="rows"><div><span>Total (server)</span><b>{tot} ms</b></div></div>
-                    <div className="bar">{([[m.latency_ms.candidates, '#707a7d'], [m.latency_ms.classifier, '#c4c7c7'], [m.latency_ms.hmm, '#ffaa33']] as const).map(([n, c], i) => <i key={i} style={{ width: `${(n / (tot || 1)) * 100}%`, background: c }} />)}</div>
-                    <div className="rows"><div><span>Candidates</span><b>{m.latency_ms.candidates} ms</b></div><div><span>Classifier</span><b>{m.latency_ms.classifier} ms</b></div><div><span>HMM decode</span><b>{m.latency_ms.hmm} ms</b></div></div></section>
+                    <div className="bar">{([[L.candidates, '#707a7d'], [L.classifier, '#c4c7c7'], [L.hmm, '#ffaa33']] as const).map(([n, c], i) => <i key={i} style={{ width: `${(n / (tot || 1)) * 100}%`, background: c }} />)}</div>
+                    <div className="rows"><div><span>Candidates</span><b>{L.candidates} ms</b></div><div><span>Classifier</span><b>{L.classifier} ms</b></div><div><span>HMM decode</span><b>{L.hmm} ms</b></div></div></section>
                   <p className="note">Ground truth stays on the server. This view only receives predictions and aggregate scores.</p>
                 </>
               ) : <p className="note" style={{ paddingTop: 20 }}>No result yet.</p>}

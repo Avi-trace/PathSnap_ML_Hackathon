@@ -18,4 +18,4 @@ export interface PredictResult {
   metrics: Metrics;
 }
 export interface Health { status: string; model?: string; mock?: boolean }   // mock:true only from the dev mock server
-export type LayerKey = 'net' | 'gps' | 'clf' | 'hmm' | 'brk';
+export type LayerKey = 'base' | 'net' | 'gps' | 'clf' | 'hmm' | 'brk';

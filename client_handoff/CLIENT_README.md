@@ -67,7 +67,7 @@ All bodies are JSON. Coordinates are **[longitude, latitude]** in degrees (x fir
 ### `GET /health`
 ```json
 {"status":"ok","model":"RandomForest (Optuna-tuned) + HMM","n_trips":10,
- "decoder":{"alpha":1.0,"beta":10.0,"invalid_pen":20.0,"gap_s":15.0,"reset_d":500.0}}
+ "decoder":{"alpha":0.97,"beta":2.97,"invalid_pen":39.1,"gap_s":15.0,"reset_d":500.0}}
 ```
 `mock: true` is present only on the mock server. Show `model` somewhere visible.
 
@@ -110,7 +110,7 @@ Metric meanings (use these exact definitions in tooltips/labels):
 Errors: `404 {"detail":"unknown trip_id"}`, `422` malformed body, `500 {"detail":"<ErrorType>: <message>"}`. Network failure = no response.
 Treat missing optional fields defensively (`scored:false`, empty `hmm.route`, empty `breaks`).
 
-Performance to design for: `/predict` takes about **0.3 to 3.5 s** per trip on the server (can be longer for very large trips); responses are **~25 KB to ~300 KB**
+Performance to design for: `/predict` takes about **0.3 to 3 s** for most trips, and **5 s or more** for the largest ones or when several requests queue (the server handles one at a time); responses are **~25 KB to ~300 KB**
 (larger trips can reach a few MB). Use a client timeout of at least 60 s, show a progress state, disable the run button while busy, and never block the UI thread.
 
 ## 5. Functional requirements
@@ -118,7 +118,8 @@ Performance to design for: `/predict` takes about **0.3 to 3.5 s** per trip on t
 1. **Connect screen:** on load call `/health` then `/trips`. Show the model name and API address. On failure show a clear error, an editable API URL field and a Retry button. Never crash.
 2. **Trip picker:** list every trip from `/trips` (index, id, point count, duration). Select with click or ↑/↓. Enter = run. Works for any number of trips (ten expected).
 3. **Run:** `POST /predict` for the selected id. Disable the button while running; show a running state (stage text + elapsed time is fine); handle every error class above with a readable message and let the user retry or pick another trip.
-4. **Map** (own rendering; **no tile server**, it must work offline): draw `network` (dim), `gps` (small dots), `classifier_only.arcs` (dashed), `classifier_only.breaks` (rings), `hmm.route` (bold, highlighted).
+4. **Map** (own canvas rendering): draw the route on top of a real street map when the client laptop has internet (OpenStreetMap tiles under the route, placed with the same projection as the route, attribution "© OpenStreetMap contributors" shown),
+   and **fall back automatically to the offline vector road network** (`network`) if no tile loads, so it still works with no internet. Layers: `network` (offline roads), `gps` (small dots), `classifier_only.arcs` (dashed), `classifier_only.breaks` (rings), `hmm.route` (bold, highlighted). Note: CARTO's free tiles now return an "API KEY REQUIRED" watermark; use OpenStreetMap or a keyed provider.
    Layer toggles for each. Pan (drag), zoom (wheel, cursor-anchored), double-click to fit, scale bar, legend, start/end markers on the HMM route.
    Use a local equirectangular projection for drawing: `x = (lon-lon0)·cos(lat0)`, `y = -(lat-lat0)` (lat/lon in degrees → keep aspect right). Must stay smooth on a 4000-point trip (canvas or WebGL, not thousands of DOM nodes).
 5. **Results panel:** classifier-only vs +HMM for pointwise accuracy and route continuity (and route F1), the delta, candidate miss rate, number of disconnected jumps (`breaks.length`), n_obs, model name, and the latency breakdown (3 stages + total).
@@ -181,7 +182,7 @@ When the real server is reachable on the LAN, switch with `?api=http://<SERVER_I
 - [ ] `/trips` is the only source of the trip list; no ids/results/numbers hardcoded (search the source to confirm).
 - [ ] No reference/ground-truth data requested or shown; mock code and `mock-data` files removed from the shipped build.
 - [ ] Intro works, can be skipped, and `#app` jumps straight to the picker; `?fx=0` and `prefers-reduced-motion` behave.
-- [ ] Works with the network cable pulled from the internet (fonts bundled, no CDN, no map tiles).
+- [ ] Works with no internet: fonts are bundled, no CDN; the street-map tiles are optional and the offline vector roads appear automatically when they cannot load.
 - [ ] Screenshots captured for the report: connect screen, trip list, a finished run (map + results), and an error state.
 - [ ] README for the client (install, run, `?api=` usage) is committed.
 

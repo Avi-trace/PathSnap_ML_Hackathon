@@ -46,6 +46,10 @@ pip install -r requirements.txt
 
 ## Reproduce the experiments (train + student_test only; the evaluator partition is never read)
 
+First tell the code where the dataset is: set `PATHSNAP_DATA_ROOT` to the folder that contains `train\` and `student_test\`
+(cmd: `set "PATHSNAP_DATA_ROOT=..."`, PowerShell: `$env:PATHSNAP_DATA_ROOT="..."`). Without it the scripts look for `..\Student folder\Student folder` next to this repository.
+Scripts 03 and 04 write the trained models to `artifacts/models/` (not committed; only the final bundle in `artifacts/final/` is), and scripts 05, 07, 09 to 12 read them.
+
 ```
 python scripts/01_eda_inventory.py  --data-root "<.../Student folder/Student folder>"
 python scripts/02_build_dataset.py  --data-root "<.../Student folder/Student folder>"

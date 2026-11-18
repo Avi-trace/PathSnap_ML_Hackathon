@@ -89,17 +89,36 @@ def _continuity(arcs: np.ndarray, A, B) -> float:
     return float(flags.mean()) if len(flags) else 1.0
 
 
+MAX_SCORING_CELLS = 150_000_000    # n_obs x route length of the alignment table; above this scoring is skipped (memory guard)
+
+
+def _unscored(pred: Prediction) -> dict:
+    """Answer used when a trip cannot be scored (no/invalid reference route, nothing near the route, too large)."""
+    return {"scored": False, "n_obs": int(pred.n_obs), "latency_ms": {k: int(round(v)) for k, v in pred.timings_ms.items()}}
+
+
 def score_prediction(pred: Prediction, trip: Trip) -> dict:
-    """Server-side scoring against the reference route (needs trip.route). Aggregate numbers only."""
+    """Server-side scoring against the reference route (needs trip.route). Aggregate numbers only.
+
+    Scoring is optional: whenever it is not possible the result is {"scored": False, ...} and the prediction itself is unaffected.
+    """
     A, B = trip.arcs[:, 0], trip.arcs[:, 1]
-    ref, rd = align_to_route(pred.G, pred.N, A, B, trip.route)
+    route = trip.route
+    if route is None:
+        return _unscored(pred)
+    route = route[(route >= 0) & (route < len(A))]                         # ignore ids that are not arcs of this network
+    if len(route) == 0 or pred.n_obs == 0 or pred.n_obs * len(route) > MAX_SCORING_CELLS:
+        return _unscored(pred)
+    ref, rd = align_to_route(pred.G, pred.N, A, B, route)
     elig = rd <= ELIGIBLE_M
     n_elig = int(elig.sum())
+    if n_elig == 0:                                                        # nothing lies near the reference route: no meaningful score
+        return _unscored(pred)
     n_arcs = len(A)
     cand_keys = np.unique(pred.cand_obs.astype(np.int64) * n_arcs + pred.cand_arc)
     ref_keys = np.arange(pred.n_obs, dtype=np.int64) * n_arcs + ref
     in_cands = np.isin(ref_keys, cand_keys)
-    ref_set = set(trip.route.tolist())
+    ref_set = set(route.tolist())
 
     def f1(arcs):
         s = set(arcs[arcs >= 0].tolist())
@@ -108,6 +127,7 @@ def score_prediction(pred: Prediction, trip: Trip) -> dict:
         return 2 * pr * rc / max(pr + rc, 1e-12)
 
     return {
+        "scored": True,
         "n_obs": n_elig,
         "pointwise_acc_classifier": float((pred.clf_arc[elig] == ref[elig]).mean()),
         "pointwise_acc_hmm": float((pred.hmm_arc[elig] == ref[elig]).mean()),

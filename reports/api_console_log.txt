@@ -1,0 +1,10 @@
+20:14:50 INFO pathsnap.api | PREDICT trip=00000000 client=127.0.0.1 obs=2503 | acc clf 0.9501 -> hmm 0.9796 | continuity clf 0.841 -> hmm 0.985 | server 1026 ms
+20:14:51 INFO pathsnap.api | PREDICT trip=00000007 client=127.0.0.1 obs=1354 | acc clf 0.9254 -> hmm 0.9010 | continuity clf 0.991 -> hmm 1.000 | server 750 ms
+20:14:53 INFO pathsnap.api | PREDICT trip=00000009 client=127.0.0.1 obs=1049 | acc clf 0.8713 -> hmm 0.9142 | continuity clf 0.900 -> hmm 0.995 | server 1459 ms
+20:14:55 INFO pathsnap.api | PREDICT trip=00000040 client=127.0.0.1 obs=2995 | acc clf 0.9295 -> hmm 0.9429 | continuity clf 0.936 -> hmm 0.991 | server 2127 ms
+20:14:56 INFO pathsnap.api | PREDICT trip=00000052 client=127.0.0.1 obs=262 | acc clf 0.9580 -> hmm 0.9924 | continuity clf 0.893 -> hmm 1.000 | server 266 ms
+20:15:02 INFO pathsnap.api | PREDICT trip=00000056 client=127.0.0.1 obs=3955 | acc clf 0.9044 -> hmm 0.9570 | continuity clf 0.817 -> hmm 0.994 | server 5567 ms
+20:15:03 INFO pathsnap.api | PREDICT trip=00000065 client=127.0.0.1 obs=768 | acc clf 0.8724 -> hmm 0.8880 | continuity clf 0.905 -> hmm 0.986 | server 781 ms
+20:15:07 INFO pathsnap.api | PREDICT trip=00000076 client=127.0.0.1 obs=1486 | acc clf 0.8742 -> hmm 0.9590 | continuity clf 0.839 -> hmm 0.983 | server 3703 ms
+20:15:11 INFO pathsnap.api | PREDICT trip=00000077 client=127.0.0.1 obs=3911 | acc clf 0.7198 -> hmm 0.7914 | continuity clf 0.963 -> hmm 0.997 | server 3260 ms
+20:15:12 INFO pathsnap.api | PREDICT trip=00000091 client=127.0.0.1 obs=874 | acc clf 0.8741 -> hmm 0.9211 | continuity clf 0.819 -> hmm 0.973 | server 891 ms
