@@ -1,0 +1,22 @@
+{
+  "model": "RandomForest",
+  "best_params": {
+    "n_estimators": 65,
+    "max_depth": 17,
+    "min_samples_leaf": 10,
+    "max_features": 0.32789310482836637,
+    "max_samples": 0.6420380135006861
+  },
+  "best_cv_top1": 0.8683612730915155,
+  "n_trials": 9,
+  "tuning_seconds": 1236.4688494205475,
+  "sampler": "TPE (seed 0, 5 random start-up trials)",
+  "objective": "mean 3-fold group-CV observation-level Top-1",
+  "untuned_params": {
+    "n_estimators": 50,
+    "max_depth": 16,
+    "min_samples_leaf": 50,
+    "max_features": "sqrt",
+    "max_samples": null
+  }
+}

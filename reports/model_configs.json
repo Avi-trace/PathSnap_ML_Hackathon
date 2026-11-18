@@ -1,0 +1,103 @@
+{
+  "seed": 0,
+  "cv_subsample": 0.3,
+  "folds": 3,
+  "features": [
+    "dist",
+    "dist_gap",
+    "dist_rank",
+    "n_cand",
+    "along_m",
+    "remain_m",
+    "arc_len",
+    "lateral",
+    "cos_dh",
+    "abs_dh",
+    "cos_gap",
+    "speed_w",
+    "step_speed",
+    "dt_prev",
+    "dt_next",
+    "outdeg_end",
+    "indeg_start",
+    "two_way"
+  ],
+  "excluded_from_fit": [
+    "00000033",
+    "00000054"
+  ],
+  "models": {
+    "GaussianNB": {
+      "family": "Probabilistic",
+      "config": "var_smoothing=1e-9"
+    },
+    "LogisticRegression": {
+      "family": "Linear",
+      "config": "StandardScaler + C=1.0, lbfgs, max_iter=300"
+    },
+    "DecisionTree": {
+      "family": "Tree",
+      "config": "max_depth=12, min_samples_leaf=50"
+    },
+    "RandomForest": {
+      "family": "Bagging ensemble",
+      "config": "50 trees, max_depth=16, min_samples_leaf=50"
+    },
+    "ExtraTrees": {
+      "family": "Bagging ensemble",
+      "config": "50 trees, max_depth=16, min_samples_leaf=50"
+    },
+    "HistGradientBoosting": {
+      "family": "Boosting",
+      "config": "300 iters, lr=0.1, max_leaf_nodes=63"
+    },
+    "LightGBM": {
+      "family": "Boosting",
+      "config": "300 rounds, lr=0.1, num_leaves=63, min_child_samples=50"
+    },
+    "XGBoost": {
+      "family": "Boosting",
+      "config": "300 rounds, lr=0.1, max_depth=8, hist"
+    },
+    "MLP(PyTorch)": {
+      "family": "Neural network",
+      "config": "128-64 ReLU, Adam lr=1e-3, wd=1e-5, batch 4096, 15 epochs, BCE"
+    }
+  },
+  "mlp_history": {
+    "train_loss": [
+      0.0879978526552239,
+      0.04968010974676708,
+      0.045839183075356414,
+      0.04402598445779558,
+      0.04283903962315425,
+      0.04195101793787719,
+      0.04116863565403256,
+      0.0406179579311464,
+      0.04016993685442955,
+      0.03978136574270732,
+      0.03936063359756868,
+      0.03910252075826715,
+      0.038646316290357634,
+      0.038411679235062494,
+      0.03823532525179637
+    ],
+    "val_loss": [
+      0.053646549582481384,
+      0.04720288887619972,
+      0.04484482482075691,
+      0.04336904361844063,
+      0.04205697774887085,
+      0.04151998832821846,
+      0.041029706597328186,
+      0.04082748293876648,
+      0.04006163775920868,
+      0.03964381664991379,
+      0.03897903487086296,
+      0.03887954726815224,
+      0.03826551139354706,
+      0.03814191743731499,
+      0.03845393285155296
+    ]
+  }
+}

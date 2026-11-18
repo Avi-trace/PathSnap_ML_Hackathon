@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Large, regenerable artifacts (rebuild with scripts/02_build_dataset.py and 03/04)
+artifacts/data/
+artifacts/models/
+artifacts/oof_*.joblib
+artifacts/student_p_*.joblib
+# ...but the final inference bundle IS kept so the API runs straight after cloning
+!artifacts/final/
+!artifacts/final/bundle.joblib
+!artifacts/final/bundle.json
+
+# Optuna study database (the trial table is kept as reports/optuna_trials.csv)
+reports/*.db
+
+# Superseded first UI mock, and a pasted design brief that is not part of the deliverable
+ui/
+gemini-code*.md
+team_packages/dist/
+
+# Front end
+web/node_modules/
+web/dist/
+*.log.tmp
+
+# Raw data and scratch: never commit the dataset or anything from the evaluator partition
+Student folder/
+data/
+.env
+.env.*
+*.pem
+
+# transfer archive for the client teammate (the client_handoff/ folder itself is committed)
+client_handoff.zip

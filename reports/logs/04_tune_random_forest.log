@@ -1,0 +1,20 @@
+trial  0: CV top1=0.8670 ll=0.0424 (91s) best=0.8670
+trial  1: CV top1=0.8650 ll=0.0435 (135s) best=0.8670
+trial  2: CV top1=0.8666 ll=0.0427 (256s) best=0.8670
+trial  3: CV top1=0.8652 ll=0.0429 (112s) best=0.8670
+trial  4: CV top1=0.8670 ll=0.0424 (126s) best=0.8670
+trial  5: CV top1=0.8682 ll=0.0431 (127s) best=0.8682
+trial  6: CV top1=0.8681 ll=0.0416 (109s) best=0.8682
+trial  7: CV top1=0.8661 ll=0.0433 (42s) best=0.8682
+trial  8: CV top1=0.8684 ll=0.0420 (238s) best=0.8684
+
+best CV Top-1 0.8684 after 9 trials in 1236s
+best params: {'n_estimators': 65, 'max_depth': 17, 'min_samples_leaf': 10, 'max_features': 0.32789310482836637, 'max_samples': 0.6420380135006861}
+untuned: student top1 0.8730 F1 0.9300 ll 0.0345 fit 190s
+tuned: student top1 0.8720 F1 0.9295 ll 0.0342 fit 156s
+
+===== TUNED vs UNTUNED (student_test) =====
+variant  st_top1  st_top1_cond  st_macro_f1  st_precision  st_recall  st_logloss  fit_s_full  infer_s_per_100k_rows  cv_top1
+untuned    0.873        0.8739       0.9300        0.8922     0.8436      0.0345    190.3460                 0.1090   0.8658
+  tuned    0.872        0.8728       0.9295        0.8878     0.8459      0.0342    155.6835                 0.1533   0.8684
+OOF (tuned, full-data folds) train Top-1 0.8711, logloss 0.0412

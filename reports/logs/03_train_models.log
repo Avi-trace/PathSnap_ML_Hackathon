@@ -1,0 +1,52 @@
+train rows 2,881,960 (78 trips) | student_test rows 355,566 (10 trips)
+CV: 3 group folds; fit subsample 30% of observations (865,844 rows)
+  GaussianNB fold 0: top1=0.7716 cond=0.7766 f1=0.8175 ll=0.2843 fit=0s
+  GaussianNB fold 1: top1=0.7772 cond=0.7808 f1=0.8261 ll=0.4642 fit=0s
+  GaussianNB fold 2: top1=0.8478 cond=0.8505 f1=0.8263 ll=0.3769 fit=0s
+[GaussianNB] CV top1 0.7989+-0.0425 | student top1 0.7901 (cond 0.7908) F1 0.8163 ll 0.3551 cont 0.8802 | full fit 1s, infer 0.02s/100k | 5s total
+  LogisticRegression fold 0: top1=0.8255 cond=0.8308 f1=0.8833 ll=0.0563 fit=2s
+  LogisticRegression fold 1: top1=0.8476 cond=0.8514 f1=0.9025 ll=0.0757 fit=2s
+  LogisticRegression fold 2: top1=0.8904 cond=0.8932 f1=0.9199 ll=0.0600 fit=3s
+[LogisticRegression] CV top1 0.8545+-0.0330 | student top1 0.8556 (cond 0.8564) F1 0.9056 ll 0.0524 cont 0.8765 | full fit 12s, infer 0.02s/100k | 22s total
+  DecisionTree fold 0: top1=0.8214 cond=0.8267 f1=0.9010 ll=0.0533 fit=17s
+  DecisionTree fold 1: top1=0.8573 cond=0.8612 f1=0.9218 ll=0.0668 fit=15s
+  DecisionTree fold 2: top1=0.8993 cond=0.9021 f1=0.9435 ll=0.0465 fit=12s
+[DecisionTree] CV top1 0.8593+-0.0390 | student top1 0.8712 (cond 0.8720) F1 0.9276 ll 0.0394 cont 0.8777 | full fit 75s, infer 0.01s/100k | 121s total
+  RandomForest fold 0: top1=0.8324 cond=0.8378 f1=0.9064 ll=0.0404 fit=17s
+  RandomForest fold 1: top1=0.8625 cond=0.8665 f1=0.9256 ll=0.0521 fit=16s
+  RandomForest fold 2: top1=0.9024 cond=0.9053 f1=0.9466 ll=0.0356 fit=16s
+[RandomForest] CV top1 0.8658+-0.0351 | student top1 0.8730 (cond 0.8739) F1 0.9300 ll 0.0345 cont 0.8824 | full fit 104s, infer 0.09s/100k | 158s total
+  ExtraTrees fold 0: top1=0.8314 cond=0.8367 f1=0.8839 ll=0.0520 fit=6s
+  ExtraTrees fold 1: top1=0.8575 cond=0.8615 f1=0.9115 ll=0.0671 fit=5s
+  ExtraTrees fold 2: top1=0.8957 cond=0.8985 f1=0.9337 ll=0.0527 fit=5s
+[ExtraTrees] CV top1 0.8615+-0.0323 | student top1 0.8612 (cond 0.8620) F1 0.9175 ll 0.0468 cont 0.8782 | full fit 29s, infer 0.11s/100k | 49s total
+  HistGradientBoosting fold 0: top1=0.8300 cond=0.8353 f1=0.9088 ll=0.0465 fit=19s
+  HistGradientBoosting fold 1: top1=0.8463 cond=0.8502 f1=0.9172 ll=0.0682 fit=9s
+  HistGradientBoosting fold 2: top1=0.8961 cond=0.8989 f1=0.9458 ll=0.0503 fit=9s
+[HistGradientBoosting] CV top1 0.8575+-0.0344 | student top1 0.8643 (cond 0.8651) F1 0.9276 ll 0.0407 cont 0.8651 | full fit 36s, infer 0.59s/100k | 96s total
+  LightGBM fold 0: top1=0.8295 cond=0.8348 f1=0.9085 ll=0.0444 fit=5s
+  LightGBM fold 1: top1=0.8443 cond=0.8482 f1=0.9152 ll=0.0648 fit=4s
+  LightGBM fold 2: top1=0.9008 cond=0.9037 f1=0.9477 ll=0.0417 fit=5s
+[LightGBM] CV top1 0.8582+-0.0377 | student top1 0.8585 (cond 0.8593) F1 0.9248 ll 0.0506 cont 0.8351 | full fit 17s, infer 0.29s/100k | 43s total
+  XGBoost fold 0: top1=0.8346 cond=0.8400 f1=0.9102 ll=0.0405 fit=5s
+  XGBoost fold 1: top1=0.8528 cond=0.8567 f1=0.9192 ll=0.0577 fit=5s
+  XGBoost fold 2: top1=0.9030 cond=0.9059 f1=0.9468 ll=0.0366 fit=5s
+[XGBoost] CV top1 0.8635+-0.0354 | student top1 0.8707 (cond 0.8715) F1 0.9280 ll 0.0360 cont 0.8871 | full fit 25s, infer 0.11s/100k | 45s total
+  MLP(PyTorch) fold 0: top1=0.8352 cond=0.8406 f1=0.9010 ll=0.0444 fit=10s
+  MLP(PyTorch) fold 1: top1=0.8596 cond=0.8635 f1=0.9177 ll=0.0587 fit=7s
+  MLP(PyTorch) fold 2: top1=0.8955 cond=0.8983 f1=0.9360 ll=0.0438 fit=7s
+[MLP(PyTorch)] CV top1 0.8634+-0.0303 | student top1 0.8680 (cond 0.8689) F1 0.9227 ll 0.0385 cont 0.8839 | full fit 43s, infer 0.05s/100k | 70s total
+
+===== MODEL COMPARISON (sorted by CV Top-1) =====
+               model  cv_top1_mean  cv_top1_std  cv_macro_f1_mean  st_top1  st_macro_f1  st_logloss  st_route_continuity  fit_s_full  infer_s_per_100k_rows
+        RandomForest        0.8658       0.0351            0.9262   0.8730       0.9300      0.0345               0.8824    104.4361                 0.0929
+             XGBoost        0.8635       0.0354            0.9254   0.8707       0.9280      0.0360               0.8871     24.8239                 0.1090
+        MLP(PyTorch)        0.8634       0.0303            0.9182   0.8680       0.9227      0.0385               0.8839     43.3621                 0.0487
+          ExtraTrees        0.8615       0.0323            0.9097   0.8612       0.9175      0.0468               0.8782     29.1811                 0.1079
+        DecisionTree        0.8593       0.0390            0.9221   0.8712       0.9276      0.0394               0.8777     75.0089                 0.0139
+            LightGBM        0.8582       0.0377            0.9238   0.8585       0.9248      0.0506               0.8351     17.4751                 0.2875
+HistGradientBoosting        0.8575       0.0344            0.9240   0.8643       0.9276      0.0407               0.8651     35.6571                 0.5929
+  LogisticRegression        0.8545       0.0330            0.9019   0.8556       0.9056      0.0524               0.8765     11.8022                 0.0160
+          GaussianNB        0.7989       0.0425            0.8233   0.7901       0.8163      0.3551               0.8802      0.6571                 0.0234
+
+best by CV Top-1: RandomForest | total 614s

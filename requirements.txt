@@ -1,0 +1,16 @@
+# Versions the project was developed and tested with (conda env "aienv", Python 3.11)
+numpy==2.4.4
+pandas==2.3.3
+scipy==1.17.1
+scikit-learn==1.8.0
+torch==2.11.0
+optuna==5.1.0
+lightgbm==4.7.0
+xgboost==3.2.0
+folium==1.0.0
+pyproj==3.7.2
+fastapi==0.135.1
+uvicorn==0.41.0
+httpx==0.28.1
+matplotlib==3.10.8
+joblib==1.5.3

@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "name": "RandomForest (Optuna-tuned) + HMM",
+    "source_model": "RandomForest_tuned.joblib",
+    "created": "2026-11-18 13:04:46",
+    "seed": 0,
+    "excluded_train_trips": [
+      "00000033",
+      "00000054"
+    ],
+    "candidate_radius_m": 75.0
+  },
+  "features": [
+    "dist",
+    "dist_gap",
+    "dist_rank",
+    "n_cand",
+    "along_m",
+    "remain_m",
+    "arc_len",
+    "lateral",
+    "cos_dh",
+    "abs_dh",
+    "cos_gap",
+    "speed_w",
+    "step_speed",
+    "dt_prev",
+    "dt_next",
+    "outdeg_end",
+    "indeg_start",
+    "two_way"
+  ],
+  "hmm": {
+    "alpha": 0.9748246453173187,
+    "beta": 2.971993879103981,
+    "invalid_pen": 39.071477617546435,
+    "gap_s": 15.0,
+    "reset_d": 500.0
+  }
+}
